@@ -274,8 +274,7 @@ namespace MIDITestCSharp
                     BASS_MIDI_FONT[] sf = { new BASS_MIDI_FONT(newfont, -1, 0) };
                     // now set them
                     BassMidi.BASS_MIDI_StreamSetFonts(chan, sf, sf.Length);
-                    font = BassMidi.BASS_MIDI_FontInit(OpenSF.FileName, 0);
-                    BassMidi.BASS_MIDI_FontFree(newfont);
+                    font = newfont;
                 }
                 else Error("Can't load soundfont");
             }
