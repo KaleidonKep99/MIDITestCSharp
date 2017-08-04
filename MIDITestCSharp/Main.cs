@@ -201,8 +201,8 @@ namespace MIDITestCSharp
                 Bass.BASS_StreamFree(chan);
                 if (!IsWinXPOrOlder())
                 {
-                    WasapiProc = new WASAPIPROC(MyWasapiProc);
                     BassWasapi.BASS_WASAPI_Free();
+                    WasapiProc = new WASAPIPROC(MyWasapiProc);
                     BassWasapi.BASS_WASAPI_Init(-1, 0, 2, BASSWASAPIInit.BASS_WASAPI_BUFFER | BASSWASAPIInit.BASS_WASAPI_SHARED, 0.05f, 0, WasapiProc, IntPtr.Zero);
                 }
                 LyricsFromStream.Text = "";
