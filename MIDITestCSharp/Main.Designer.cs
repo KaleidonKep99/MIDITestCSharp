@@ -57,6 +57,7 @@
             this.ShowTimeNotTick = new System.Windows.Forms.MenuItem();
             this.ResetEverything = new System.Windows.Forms.Button();
             this.PlayPauseBtn = new System.Windows.Forms.Button();
+            this.KSIntegration = new System.ComponentModel.BackgroundWorker();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.Tempo)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.TrackbarStream)).BeginInit();
@@ -287,7 +288,7 @@
             // 
             // OpenSF
             // 
-            this.OpenSF.Filter = "Soundfonts (sf2/sf2pack)|*.sf2;*.sf2pack|All files|*.*";
+            this.OpenSF.Filter = "Soundfonts (sf2/sfz/sf2pack)|*.sf2;*.sfz;*.sf2pack|All files|*.*";
             // 
             // ShowInfo
             // 
@@ -342,6 +343,10 @@
             this.PlayPauseBtn.Text = "Play";
             this.PlayPauseBtn.UseVisualStyleBackColor = true;
             this.PlayPauseBtn.Click += new System.EventHandler(this.PlayPauseBtn_Click);
+            // 
+            // KSIntegration
+            // 
+            this.KSIntegration.DoWork += new System.ComponentModel.DoWorkEventHandler(this.KSIntegration_DoWork);
             // 
             // Main
             // 
@@ -408,6 +413,7 @@
         private System.Windows.Forms.Button ResetEverything;
         private System.Windows.Forms.TrackBar CPUBar;
         private System.Windows.Forms.Button PlayPauseBtn;
+        private System.ComponentModel.BackgroundWorker KSIntegration;
     }
 }
 

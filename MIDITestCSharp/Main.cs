@@ -11,11 +11,14 @@ using Un4seen.Bass.AddOn.Midi;
 using System.Diagnostics;
 using System.Threading;
 using System.IO;
+using Microsoft.Win32;
 
 namespace MIDITestCSharp
 {
     public partial class Main : Form
     {
+        static bool isitrunning = true;    // Lel
+
         static int chan;                   // Channel handle
         static int font;                   // SoundFont
 
@@ -160,6 +163,7 @@ namespace MIDITestCSharp
             }
 
             GetInfoFromStream.RunWorkerAsync();
+            KSIntegration.RunWorkerAsync();
 
             VoiceBar.Value = 100;
 
@@ -197,9 +201,9 @@ namespace MIDITestCSharp
                 Bass.BASS_StreamFree(chan);
                 if (!IsWinXPOrOlder())
                 {
-                    BassWasapi.BASS_WASAPI_Free();
                     WasapiProc = new WASAPIPROC(MyWasapiProc);
-                    BassWasapi.BASS_WASAPI_Init(-1, 0, 2, BASSWASAPIInit.BASS_WASAPI_EVENT | BASSWASAPIInit.BASS_WASAPI_SHARED, 0, 0, WasapiProc, IntPtr.Zero);
+                    BassWasapi.BASS_WASAPI_Free();
+                    BassWasapi.BASS_WASAPI_Init(-1, 0, 2, BASSWASAPIInit.BASS_WASAPI_BUFFER | BASSWASAPIInit.BASS_WASAPI_SHARED, 0.05f, 0, WasapiProc, IntPtr.Zero);
                 }
                 LyricsFromStream.Text = "";
                 if ((chan = BassMidi.BASS_MIDI_StreamCreateFile(OpenMIDI.FileName, 0L, 0L,
@@ -265,7 +269,6 @@ namespace MIDITestCSharp
 
         private void LoadSoundfont_Click(object sender, EventArgs e)
         {
-            string copy;
             if (OpenSF.ShowDialog() == DialogResult.OK)
             {
                 int newfont = BassMidi.BASS_MIDI_FontInit(OpenSF.FileName, 0);
@@ -301,8 +304,8 @@ namespace MIDITestCSharp
             else
             {
                 Position.Text = String.Format("{0}/{1}", 
-                    String.Format("{0:0}:{1:00}", PassedTime.TotalMinutes, PassedTime.Seconds),
-                    String.Format("{0:0}:{1:00}", LengthTime.TotalMinutes, LengthTime.Seconds)
+                    String.Format("{0:0}:{1:00}", PassedTime.Minutes, PassedTime.Seconds),
+                    String.Format("{0:0}:{1:00}", LengthTime.Minutes, LengthTime.Seconds)
                     );
             }
 
@@ -337,6 +340,49 @@ namespace MIDITestCSharp
                 sfinfolabel = String.Format("Name: {0}\nLoaded: {1} / {2}", i.name, i.samload, i.samsize);
 
                 System.Threading.Thread.Sleep(1);
+            }
+        }
+
+        private void KSIntegration_DoWork(object sender, DoWorkEventArgs e)
+        {
+            using (RegistryKey Mixer = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Keppy's Synthesizer\", true))
+            {
+                if (Mixer != null && !IsWinXPOrOlder())
+                {
+                    RegistryKey SynthSettings = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Keppy's Synthesizer\\Settings", true);
+                    RegistryKey Channels = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Keppy's Synthesizer\\Channels", true);
+                    RegistryKey Watchdog = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Keppy's Synthesizer\\Watchdog", true);
+                    RegistryKey SynthPaths = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Keppy's Synthesizer\\Paths", true);
+                    while (isitrunning)
+                    {
+                        try
+                        {
+                            if (chan != 0)
+                            {
+                                int levels = BassWasapi.BASS_WASAPI_GetLevel();
+
+                                Mixer.SetValue("leftvol", Utils.LowWord32(levels), RegistryValueKind.DWord);
+                                Mixer.SetValue("rightvol", Utils.HighWord32(levels), RegistryValueKind.DWord);
+                                Mixer.SetValue("currentcpuusage0", cpu, RegistryValueKind.DWord);
+                                for (int i = 1; i <= 16; i++)
+                                {
+                                    Mixer.SetValue(String.Format("chv{0}", i), BassMidi.BASS_MIDI_StreamGetEvent(chan, i - 1, (BASSMIDIEvent)0x20001), RegistryValueKind.DWord);
+                                    BassMidi.BASS_MIDI_StreamEvent(chan, i - 1, BASSMIDIEvent.MIDI_EVENT_MIXLEVEL, Convert.ToInt32(Channels.GetValue(String.Format("ch{0}", i))));
+                                }
+                            }
+
+                            Watchdog.SetValue("currentapp", "BASSMIDI Test CSharp by Kep", RegistryValueKind.String);
+                            if (IntPtr.Size == 8) Watchdog.SetValue("bit", "64-bit", RegistryValueKind.String);
+                            else if (IntPtr.Size == 4) Watchdog.SetValue("bit", "32-bit", RegistryValueKind.String);
+
+                            System.Threading.Thread.Sleep(1);
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.ToString());
+                        }
+                    }
+                }
             }
         }
 
@@ -412,6 +458,36 @@ namespace MIDITestCSharp
                     default:
                         if (!IsWinXPOrOlder()) BassWasapi.BASS_WASAPI_Free();
                         Bass.BASS_Free();
+
+                        isitrunning = false;
+                        Thread.Sleep(100);
+
+                        using (RegistryKey Mixer = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Keppy's Synthesizer\", true))
+                        {
+                            if (Mixer != null)
+                            {
+                                RegistryKey SynthSettings = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Keppy's Synthesizer\\Settings", true);
+                                RegistryKey Channels = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Keppy's Synthesizer\\Channels", true);
+                                RegistryKey Watchdog = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Keppy's Synthesizer\\Watchdog", true);
+                                RegistryKey SynthPaths = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Keppy's Synthesizer\\Paths", true);
+                                try
+                                {
+                                    Mixer.SetValue("leftvol", "0", RegistryValueKind.DWord);
+                                    Mixer.SetValue("rightvol", "0", RegistryValueKind.DWord);
+                                    Mixer.SetValue("currentcpuusage0", "0", RegistryValueKind.DWord);
+                                    Mixer.SetValue("currentvoices0", "0", RegistryValueKind.DWord);
+                                    for (int i = 1; i <= 16; i++) Mixer.SetValue(String.Format("chv{0}", i), "0", RegistryValueKind.DWord);
+
+                                    Watchdog.SetValue("currentapp", "None", RegistryValueKind.String);
+                                    Watchdog.SetValue("bit", "...", RegistryValueKind.String);
+                                }
+                                catch (Exception ex)
+                                {
+                                    MessageBox.Show(ex.ToString());
+                                }
+                            }
+                        }
+
                         Application.ExitThread();
                         break;
                 }
@@ -441,6 +517,11 @@ namespace MIDITestCSharp
                 }
                 else PlayPauseBtn.Text = "Play";
             }
+        }
+
+        public int MakeLong(short lowPart, short highPart)
+        {
+            return (int)(((ushort)lowPart) | (uint)(highPart << 16));
         }
     }
 }
