@@ -21,6 +21,8 @@ namespace MIDITestCSharp
 
         static int chan;                   // Channel handle
         static int font;                   // SoundFont
+        static int fontp = -1;             // SoundFont preset
+        static int fontb = 0;              // SoundFont bank
 
         static int miditempo;              // MIDI file tempo
         static float temposcale = 1.0f;    // Tempo adjustment
@@ -199,13 +201,21 @@ namespace MIDITestCSharp
             if (OpenMIDI.ShowDialog() == DialogResult.OK)
             {
                 Bass.BASS_StreamFree(chan);
+
                 if (!IsWinXPOrOlder())
                 {
                     BassWasapi.BASS_WASAPI_Free();
                     WasapiProc = new WASAPIPROC(MyWasapiProc);
-                    BassWasapi.BASS_WASAPI_Init(-1, 0, 2, BASSWASAPIInit.BASS_WASAPI_BUFFER | BASSWASAPIInit.BASS_WASAPI_SHARED, 0.05f, 0, WasapiProc, IntPtr.Zero);
+                    BassWasapi.BASS_WASAPI_Init(-1, 0, 2, BASSWASAPIInit.BASS_WASAPI_BUFFER | BASSWASAPIInit.BASS_WASAPI_SHARED, 0.5f, 0, WasapiProc, IntPtr.Zero);
                 }
+
+                LoopSyncProc = null;
+                LyricSyncProc = null;
+                EndSyncProc = null;
+                TempoSyncProc = null;
+
                 LyricsFromStream.Text = "";
+
                 if ((chan = BassMidi.BASS_MIDI_StreamCreateFile(OpenMIDI.FileName, 0L, 0L,
                     (IsWinXPOrOlder() ? BASSFlag.BASS_DEFAULT : (BASSFlag.BASS_STREAM_DECODE | BASSFlag.BASS_SAMPLE_FLOAT)) | BASSFlag.BASS_MIDI_DECAYEND | (RvAndChr.Checked ? BASSFlag.BASS_MIDI_NOFX : 0),
                     0)) == 0)
@@ -216,6 +226,7 @@ namespace MIDITestCSharp
                     Error("Can't play the file");
                     return;
                 }
+
                 Bass.BASS_ChannelSetAttribute(chan, BASSAttribute.BASS_ATTRIB_MIDI_VOICES, VoiceBar.Value); // apply to current MIDI file too
                 Bass.BASS_ChannelSetAttribute(chan, BASSAttribute.BASS_ATTRIB_MIDI_CPU, CPUBar.Value); // apply to current MIDI file too
                 OpenMIDIButton.Text = OpenMIDI.FileName;
@@ -226,6 +237,7 @@ namespace MIDITestCSharp
                     else
                         MIDITitle.Text = "";
                 }
+                TrackbarStream.Value = 0;
                 TrackbarStream.Minimum = 0;
                 TrackbarStream.Maximum = (int)Bass.BASS_ChannelGetLength(chan, BASSMode.BASS_POS_MIDI_TICK) / 120;
                 { // set looping syncs
@@ -254,7 +266,7 @@ namespace MIDITestCSharp
                     Bass.BASS_ChannelSetSync(chan, BASSSync.BASS_SYNC_SETPOS | BASSSync.BASS_SYNC_MIXTIME, 0, TempoSyncProc, IntPtr.Zero);
                 }
                 { // get default soundfont in case of matching soundfont being used
-                    BASS_MIDI_FONT[] sf = { new BASS_MIDI_FONT(font, -1, 0) };
+                    BASS_MIDI_FONT[] sf = { new BASS_MIDI_FONT(font, fontp, fontb) };
                     // now set them
                     BassMidi.BASS_MIDI_StreamSetFonts(chan, sf, sf.Length);
                 }
@@ -271,10 +283,28 @@ namespace MIDITestCSharp
         {
             if (OpenSF.ShowDialog() == DialogResult.OK)
             {
+                if (Path.GetExtension(OpenSF.FileName).ToLowerInvariant() == ".sfz")
+                {
+                    using (var form = new BankNPresetSel(Path.GetFileName(OpenSF.FileName), 1, 0))
+                    {
+                        var result = form.ShowDialog();
+                        if (result == DialogResult.OK)
+                        {
+                            fontb = (int)form.DesBankValueReturn;
+                            fontp = (int)form.DesPresetValueReturn;
+                        }
+                    }
+                }
+                else
+                {
+                    fontb = 0;
+                    fontp = -1;
+                }
+
                 int newfont = BassMidi.BASS_MIDI_FontInit(OpenSF.FileName, 0);
                 if (newfont != 0)
                 {
-                    BASS_MIDI_FONT[] sf = { new BASS_MIDI_FONT(newfont, -1, 0) };
+                    BASS_MIDI_FONT[] sf = { new BASS_MIDI_FONT(newfont, fontp, fontb) };
                     // now set them
                     BassMidi.BASS_MIDI_StreamSetFonts(chan, sf, sf.Length);
                     font = newfont;
@@ -319,40 +349,49 @@ namespace MIDITestCSharp
 
         private void GetInfoFromStream_DoWork(object sender, DoWorkEventArgs e)
         {
-            while (true)
+            try
             {
-                if (chan != 0)
+                while (true)
                 {
-                    normalpos = Bass.BASS_ChannelGetPosition(chan);
-                    normallen = Bass.BASS_ChannelGetLength(chan);
-                    tick = Bass.BASS_ChannelGetPosition(chan, BASSMode.BASS_POS_MIDI_TICK); // get position in ticks
-                    lentick = Bass.BASS_ChannelGetLength(chan, BASSMode.BASS_POS_MIDI_TICK); // get length in ticks
-                    Bass.BASS_ChannelSetAttribute(chan, BASSAttribute.BASS_ATTRIB_MIDI_VOICES, maxvoices); // apply to current MIDI file too
-                    Bass.BASS_ChannelSetAttribute(chan, BASSAttribute.BASS_ATTRIB_MIDI_CPU, maxcpu); // apply to current MIDI file too
-                    Bass.BASS_ChannelGetAttribute(chan, BASSAttribute.BASS_ATTRIB_MIDI_VOICES_ACTIVE, ref active); // get active voices
-                    Bass.BASS_ChannelGetAttribute(chan, BASSAttribute.BASS_ATTRIB_CPU, ref cpu); // get cpu usage
-                    PassedTime = TimeSpan.FromSeconds(Bass.BASS_ChannelBytes2Seconds(chan, normalpos));
-                    LengthTime = TimeSpan.FromSeconds(Bass.BASS_ChannelBytes2Seconds(chan, normallen));
+                    if (chan != 0)
+                    {
+                        normalpos = Bass.BASS_ChannelGetPosition(chan);
+                        normallen = Bass.BASS_ChannelGetLength(chan);
+                        tick = Bass.BASS_ChannelGetPosition(chan, BASSMode.BASS_POS_MIDI_TICK); // get position in ticks
+                        lentick = Bass.BASS_ChannelGetLength(chan, BASSMode.BASS_POS_MIDI_TICK); // get length in ticks
+                        Bass.BASS_ChannelSetAttribute(chan, BASSAttribute.BASS_ATTRIB_MIDI_VOICES, maxvoices); // apply to current MIDI file too
+                        Bass.BASS_ChannelSetAttribute(chan, BASSAttribute.BASS_ATTRIB_MIDI_CPU, Convert.ToSingle(maxcpu)); // apply to current MIDI file too
+                        Bass.BASS_ChannelGetAttribute(chan, BASSAttribute.BASS_ATTRIB_MIDI_VOICES_ACTIVE, ref active); // get active voices
+                        Bass.BASS_ChannelGetAttribute(chan, BASSAttribute.BASS_ATTRIB_CPU, ref cpu); // get cpu usage
+                        PassedTime = TimeSpan.FromSeconds(Bass.BASS_ChannelBytes2Seconds(chan, normalpos));
+                        LengthTime = TimeSpan.FromSeconds(Bass.BASS_ChannelBytes2Seconds(chan, normallen));
+                    }
+
+                    BASS_MIDI_FONTINFO i = new BASS_MIDI_FONTINFO();
+                    BassMidi.BASS_MIDI_FontGetInfo(font, i);
+                    sfinfolabel = String.Format("Name: {0}\nLoaded: {1} / {2}", i.name, i.samload, i.samsize);
+
+                    System.Threading.Thread.Sleep(1);
                 }
-
-                BASS_MIDI_FONTINFO i = new BASS_MIDI_FONTINFO();
-                BassMidi.BASS_MIDI_FontGetInfo(font, i);
-                sfinfolabel = String.Format("Name: {0}\nLoaded: {1} / {2}", i.name, i.samload, i.samsize);
-
-                System.Threading.Thread.Sleep(1);
             }
+            catch { }
+        }
+
+        private void GetInfoFromStream_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            GetInfoFromStream.RunWorkerAsync();
         }
 
         private void KSIntegration_DoWork(object sender, DoWorkEventArgs e)
         {
-            using (RegistryKey Mixer = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Keppy's Synthesizer\", true))
+            using (RegistryKey Mixer = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\OmniMIDI\", true))
             {
                 if (Mixer != null && !IsWinXPOrOlder())
                 {
-                    RegistryKey SynthSettings = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Keppy's Synthesizer\\Settings", true);
-                    RegistryKey Channels = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Keppy's Synthesizer\\Channels", true);
-                    RegistryKey Watchdog = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Keppy's Synthesizer\\Watchdog", true);
-                    RegistryKey SynthPaths = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Keppy's Synthesizer\\Paths", true);
+                    RegistryKey SynthSettings = Registry.CurrentUser.OpenSubKey("SOFTWARE\\OmniMIDI\\Configuration", true);
+                    RegistryKey Channels = Registry.CurrentUser.OpenSubKey("SOFTWARE\\OmniMIDI\\Channels", true);
+                    RegistryKey Watchdog = Registry.CurrentUser.OpenSubKey("SOFTWARE\\KOmniMIDI\\Watchdog", true);
+                    RegistryKey SynthPaths = Registry.CurrentUser.OpenSubKey("SOFTWARE\\OmniMIDI\\Paths", true);
                     while (isitrunning)
                     {
                         try
@@ -370,10 +409,6 @@ namespace MIDITestCSharp
                                     BassMidi.BASS_MIDI_StreamEvent(chan, i - 1, BASSMIDIEvent.MIDI_EVENT_MIXLEVEL, Convert.ToInt32(Channels.GetValue(String.Format("ch{0}", i))));
                                 }
                             }
-
-                            Watchdog.SetValue("currentapp", "BASSMIDI Test CSharp by Kep", RegistryValueKind.String);
-                            if (IntPtr.Size == 8) Watchdog.SetValue("bit", "64-bit", RegistryValueKind.String);
-                            else if (IntPtr.Size == 4) Watchdog.SetValue("bit", "32-bit", RegistryValueKind.String);
 
                             System.Threading.Thread.Sleep(1);
                         }
@@ -456,7 +491,7 @@ namespace MIDITestCSharp
                         e.Cancel = true;
                         break;
                     default:
-                        if (!IsWinXPOrOlder()) BassWasapi.BASS_WASAPI_Free();
+                        if (IsWinXPOrOlder() == false) BassWasapi.BASS_WASAPI_Free();
                         Bass.BASS_Free();
 
                         isitrunning = false;

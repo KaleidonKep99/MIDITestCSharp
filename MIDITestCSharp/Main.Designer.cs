@@ -74,7 +74,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.OpenMIDIButton.Location = new System.Drawing.Point(12, 12);
             this.OpenMIDIButton.Name = "OpenMIDIButton";
-            this.OpenMIDIButton.Size = new System.Drawing.Size(360, 23);
+            this.OpenMIDIButton.Size = new System.Drawing.Size(459, 23);
             this.OpenMIDIButton.TabIndex = 0;
             this.OpenMIDIButton.Text = "Click here to open a file...";
             this.OpenMIDIButton.UseVisualStyleBackColor = true;
@@ -86,7 +86,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.Controls.Add(this.TempoCurrent);
             this.groupBox1.Controls.Add(this.Tempo);
-            this.groupBox1.Location = new System.Drawing.Point(387, 56);
+            this.groupBox1.Location = new System.Drawing.Point(486, 56);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(54, 167);
             this.groupBox1.TabIndex = 1;
@@ -122,7 +122,7 @@
             this.TrackbarStream.AutoSize = false;
             this.TrackbarStream.Location = new System.Drawing.Point(56, 61);
             this.TrackbarStream.Name = "TrackbarStream";
-            this.TrackbarStream.Size = new System.Drawing.Size(219, 24);
+            this.TrackbarStream.Size = new System.Drawing.Size(318, 24);
             this.TrackbarStream.TabIndex = 2;
             this.TrackbarStream.TickFrequency = 0;
             this.TrackbarStream.TickStyle = System.Windows.Forms.TickStyle.None;
@@ -132,7 +132,9 @@
             // 
             this.RvAndChr.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.RvAndChr.AutoSize = true;
-            this.RvAndChr.Location = new System.Drawing.Point(281, 64);
+            this.RvAndChr.Checked = true;
+            this.RvAndChr.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.RvAndChr.Location = new System.Drawing.Point(380, 64);
             this.RvAndChr.Name = "RvAndChr";
             this.RvAndChr.Size = new System.Drawing.Size(106, 17);
             this.RvAndChr.TabIndex = 3;
@@ -142,7 +144,8 @@
             // 
             // Position
             // 
-            this.Position.Location = new System.Drawing.Point(322, 35);
+            this.Position.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.Position.Location = new System.Drawing.Point(421, 35);
             this.Position.Name = "Position";
             this.Position.Size = new System.Drawing.Size(119, 18);
             this.Position.TabIndex = 4;
@@ -157,7 +160,7 @@
             this.groupBox2.Controls.Add(this.LyricsFromStream);
             this.groupBox2.Location = new System.Drawing.Point(12, 91);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(369, 76);
+            this.groupBox2.Size = new System.Drawing.Size(468, 76);
             this.groupBox2.TabIndex = 3;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Lyrics";
@@ -168,7 +171,7 @@
             this.LyricsFromStream.Enabled = false;
             this.LyricsFromStream.Location = new System.Drawing.Point(3, 16);
             this.LyricsFromStream.Name = "LyricsFromStream";
-            this.LyricsFromStream.Size = new System.Drawing.Size(363, 57);
+            this.LyricsFromStream.Size = new System.Drawing.Size(462, 57);
             this.LyricsFromStream.TabIndex = 0;
             this.LyricsFromStream.Text = "Not yet implemented";
             this.LyricsFromStream.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -181,7 +184,7 @@
             this.groupBox3.Controls.Add(this.SFInfoLabel);
             this.groupBox3.Location = new System.Drawing.Point(12, 169);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(369, 54);
+            this.groupBox3.Size = new System.Drawing.Size(468, 54);
             this.groupBox3.TabIndex = 4;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "SoundFont";
@@ -189,7 +192,7 @@
             // LoadSoundfont
             // 
             this.LoadSoundfont.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.LoadSoundfont.Location = new System.Drawing.Point(285, 19);
+            this.LoadSoundfont.Location = new System.Drawing.Point(384, 19);
             this.LoadSoundfont.Name = "LoadSoundfont";
             this.LoadSoundfont.Size = new System.Drawing.Size(75, 23);
             this.LoadSoundfont.TabIndex = 2;
@@ -216,7 +219,7 @@
             this.groupBox4.Controls.Add(this.VoiceBar);
             this.groupBox4.Location = new System.Drawing.Point(12, 225);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(429, 64);
+            this.groupBox4.Size = new System.Drawing.Size(528, 64);
             this.groupBox4.TabIndex = 5;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Performance";
@@ -230,7 +233,7 @@
             this.CPUBar.Location = new System.Drawing.Point(134, 39);
             this.CPUBar.Maximum = 100;
             this.CPUBar.Name = "CPUBar";
-            this.CPUBar.Size = new System.Drawing.Size(284, 20);
+            this.CPUBar.Size = new System.Drawing.Size(383, 20);
             this.CPUBar.TabIndex = 9;
             this.CPUBar.TickFrequency = 0;
             this.CPUBar.TickStyle = System.Windows.Forms.TickStyle.None;
@@ -265,7 +268,7 @@
             this.VoiceBar.Maximum = 2000;
             this.VoiceBar.Minimum = 1;
             this.VoiceBar.Name = "VoiceBar";
-            this.VoiceBar.Size = new System.Drawing.Size(284, 20);
+            this.VoiceBar.Size = new System.Drawing.Size(383, 20);
             this.VoiceBar.TabIndex = 6;
             this.VoiceBar.TickFrequency = 0;
             this.VoiceBar.TickStyle = System.Windows.Forms.TickStyle.None;
@@ -282,7 +285,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.MIDITitle.Location = new System.Drawing.Point(12, 35);
             this.MIDITitle.Name = "MIDITitle";
-            this.MIDITitle.Size = new System.Drawing.Size(300, 18);
+            this.MIDITitle.Size = new System.Drawing.Size(399, 18);
             this.MIDITitle.TabIndex = 6;
             this.MIDITitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
@@ -299,6 +302,7 @@
             // GetInfoFromStream
             // 
             this.GetInfoFromStream.DoWork += new System.ComponentModel.DoWorkEventHandler(this.GetInfoFromStream_DoWork);
+            this.GetInfoFromStream.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.GetInfoFromStream_RunWorkerCompleted);
             // 
             // VoiceUnlock
             // 
@@ -324,9 +328,8 @@
             // 
             // ResetEverything
             // 
-            this.ResetEverything.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.ResetEverything.Location = new System.Drawing.Point(378, 12);
+            this.ResetEverything.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.ResetEverything.Location = new System.Drawing.Point(477, 12);
             this.ResetEverything.Name = "ResetEverything";
             this.ResetEverything.Size = new System.Drawing.Size(63, 23);
             this.ResetEverything.TabIndex = 7;
@@ -352,7 +355,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(453, 301);
+            this.ClientSize = new System.Drawing.Size(552, 301);
             this.Controls.Add(this.PlayPauseBtn);
             this.Controls.Add(this.ResetEverything);
             this.Controls.Add(this.MIDITitle);
